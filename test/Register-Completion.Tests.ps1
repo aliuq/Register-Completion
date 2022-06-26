@@ -1,5 +1,8 @@
 BeforeAll {
-  . "$pwd\Register-Completion\Register-Completion.ps1"
+
+  Write-Host "in script: -$($MyInvocation.MyCommand.Path)-"
+
+  . "$pwd/Register-Completion/Register-Completion.ps1"
 
   $hash_object = "
     {
