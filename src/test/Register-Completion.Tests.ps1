@@ -1,5 +1,5 @@
 BeforeAll {
-  . "$pwd\src\Register-Completion.ps1"
+  . "$pwd\src\Register-Completion\Register-Completion.ps1"
 
   $hash_object = "
     {
