@@ -14,7 +14,7 @@ jobs:
           Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
       - name: Run Pester test
         shell: pwsh
-        run: Invoke-Pester -TestPath ./test -Output Detailed
+        run: Invoke-Pester ./test -Output Detailed
         env:
           GITHUB_ACTIONS: true
       
