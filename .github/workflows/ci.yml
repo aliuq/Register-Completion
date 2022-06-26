@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Pester test
         shell: pwsh
-        run: Invoke-Pester ./test -Output Detailed
+        run: |
+          Invoke-Pester ./test -Output Detailed
+          ls /tmp/samplemodule
         env:
           GITHUB_ACTIONS: true
