@@ -16,7 +16,7 @@ BeforeAll {
 Describe "Register-Completion" {
   Context "Test function - Convert-JsonToHash" {
     It "Convert string to <type>" -ForEach @(
-      @{ type = 'number'; src = "100"; expected = 100 }
+      @{ type = 'number'; src = "100"; expected = 1001 }
       @{ type = 'string'; src = "World"; expected = "World" }
       @{ type = 'array'; src = "['arg1','arg2','arg3']"; expected = "arg1","arg2","arg3" }
     ) {
