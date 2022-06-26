@@ -18,5 +18,4 @@ jobs:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
         shell: pwsh
         run: |
-          ./build.ps1 -Path /tmp/samplemodule
-          Publish-Module -Path /tmp/samplemodule -NuGetApiKey $env:NUGET_KEY -Verbose
+          ls /tmp/samplemodule

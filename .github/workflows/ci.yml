@@ -23,4 +23,3 @@ jobs:
         run: Invoke-Pester ./test -Output Detailed
         env:
           GITHUB_ACTIONS: true
-      
