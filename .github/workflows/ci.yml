@@ -5,7 +5,6 @@ on: push
 jobs:
   ci-ubuntu:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Setup PowerShell module cache
@@ -26,3 +25,24 @@ jobs:
         env:
           GITHUB_ACTIONS: true
       
+  ci-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PowerShell module cache
+        id: cacher
+        uses: actions/cache@v3
+        with:
+          path: "~/Documents/PowerShell/Modules"
+          key: ${{ runner.os }}-Pester
+      - name: Install Pester if not cached
+        if: steps.cacher.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
+      - name: Run Pester test
+        shell: pwsh
+        run: Invoke-Pester ./test -Output Detailed
+        env:
+          GITHUB_ACTIONS: true
