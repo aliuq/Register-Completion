@@ -22,6 +22,5 @@ jobs:
         shell: pwsh
         run: |
           Invoke-Pester ./test -Output Detailed
-          ls /tmp/samplemodule
         env:
           GITHUB_ACTIONS: true
