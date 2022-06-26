@@ -20,14 +20,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Cache powershell modules in ubuntu and macos
         if: matrix.os != 'windows-latest'
-        id: ${{ runner.os }}-cacher
+        id: ${{ matrix.os }}-cacher
         uses: actions/cache@v3
         with:
           path: "~/.local/share/powershell/Modules"
           key: ${{ runner.os }}-Pester
       - name: Cache powershell modules in windows
         if: matrix.os == 'windows-latest'
-        id: ${{ runner.os }}-cacher
+        id: ${{ matrix.os }}-cacher
         uses: actions/cache@v3
         with:
           path: "~/Documents/PowerShell/Modules"
