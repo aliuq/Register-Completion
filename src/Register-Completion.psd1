@@ -43,13 +43,10 @@ PrivateData = @{
         Tags = 'register','completion','auto-completion'
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/aliuq/Register-Completion/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
-
-        # ReleaseNotes of this module
-        ReleaseNotes = 'v0.0.14: refactor first release'
+        ProjectUri = 'https://github.com/aliuq/Register-Completion'
     }
  }
 }
