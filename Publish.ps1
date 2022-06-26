@@ -2,8 +2,8 @@ Param(
   [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback')]
   [string]$action
 )
-
-$current_version = (Test-ModuleManifest .\src\Register-Completion.psd1).version
+$dir = ".\src\Register-Completion"
+$current_version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
 
 function Set-SemverVersion {
   param(
@@ -42,10 +42,10 @@ if ($action -in 'release','release-patch','release-minor','release-major') {
   $confirm = Read-Host "Confirm to release v$($new_version)(previous v$($current_version))?(y/n)" [Char]
 
   if ($confirm -eq 'y') {
-    Update-ModuleManifest -Path .\src\Register-Completion.psd1 -ModuleVersion $new_version
+    Update-ModuleManifest -Path "$dir\Register-Completion.psd1" -ModuleVersion $new_version
     npx standard-changelog
 
-    git add .\src\Register-Completion.psd1 CHANGELOG.md
+    git add "$dir\Register-Completion.psd1" CHANGELOG.md
     git commit -m "Release v$new_version"
     git tag --annotate --message "v$new_version" v$new_version
 
@@ -57,7 +57,7 @@ if ($action -in 'release','release-patch','release-minor','release-major') {
   }
 }
 elseif ($action -in 'rollback', 'rollback-local') {
-  $version = (Test-ModuleManifest .\src\Register-Completion.psd1).version
+  $version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
   git reset --hard HEAD~1
   git tag -d "v$version"
   if ($action -eq 'rollback') {
