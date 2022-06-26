@@ -39,7 +39,9 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
+          if ((Get-Module Pester).version -ne '5.3.3') {
+            Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
+          }
 
       - name: Run Pester test
         shell: pwsh
