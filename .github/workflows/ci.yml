@@ -1,57 +1,32 @@
 name: CI
 
-on: push
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  ci-ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup PowerShell module cache
-        id: cacher
-        uses: actions/cache@v3
-        with:
-          path: "~/.local/share/powershell/Modules"
-          key: ${{ runner.os }}-Pester
-      - name: Install Pester if not cached
-        if: steps.cacher.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
-      - name: Run Pester test
-        shell: pwsh
-        run: Invoke-Pester ./test -Output Detailed
-        env:
-          GITHUB_ACTIONS: true
-      
-  ci-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup PowerShell module cache
-        id: cacher
-        uses: actions/cache@v3
-        with:
-          path: "~/.local/share/powershell/Modules"
-          key: ${{ runner.os }}-Pester
-      - name: Install Pester if not cached
-        if: steps.cacher.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -Scope CurrentUser -RequiredVersion 5.3.3
-      - name: Run Pester test
-        shell: pwsh
-        run: Invoke-Pester ./test -Output Detailed
-        env:
-          GITHUB_ACTIONS: true
+  ci-ubuntu-and-macos:
+    runs-on: ${{ matrix.os }}
 
-  ci-windows:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
       - uses: actions/checkout@v3
-      - name: Setup PowerShell module cache
+      - name: Cache powershell modules in ubuntu and macos
+        if: matrix.os !== 'windows-latest'
+        id: cacher
+        uses: actions/cache@v3
+        with:
+          path: "~/.local/share/powershell/Modules"
+          key: ${{ runner.os }}-Pester
+      - name: Cache powershell modules in windows
+        if: matrix.os === 'windows-latest'
         id: cacher
         uses: actions/cache@v3
         with:
@@ -68,3 +43,4 @@ jobs:
         run: Invoke-Pester ./test -Output Detailed
         env:
           GITHUB_ACTIONS: true
+      
