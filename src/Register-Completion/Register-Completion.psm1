@@ -1,3 +1,3 @@
 if (Get-Module Register-Completion) { return }
 
-. .\Register-Completion.ps1
+. $PSScriptRoot\Register-Completion.ps1
