@@ -3,6 +3,7 @@
 Easy to register tab completions with data structures. Easy to customize.
 
 > **Note**
+>
 > Recommeded Powershell version 7.0.0 or higher.
 
 ## Install
