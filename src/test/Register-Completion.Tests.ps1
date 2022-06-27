@@ -144,6 +144,11 @@ Describe "Register-Completion" {
         expected = @()
       }
       @{
+        type = "js object"; word = ""; ast = "gc_object_2 arg2 ";
+        list = "{'arg1': 'arg1_1', 'arg2': ['arg2_2_1', 'arg2_2_2'], 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
+        expected = @("arg2_2_1", "arg2_2_2")
+      }
+      @{
         type = "powershell hashtable"; word = ""; ast = "gc_hashtable ";
         list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
         expected = @("arg1","arg2","arg3")
@@ -182,6 +187,11 @@ Describe "Register-Completion" {
         type = "powershell hashtable"; word = "4"; ast = "gc_hashtable arg2 4";
         list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
         expected = @()
+      }
+      @{
+        type = "powershell hashtable"; word = ""; ast = "gc_hashtable_2 arg2 ";
+        list = @{arg1 = "arg1_1"; arg2 = "arg2_2_1","arg2_2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
+        expected = @("arg2_2_1", "arg2_2_2")
       }
     ) {
       Get-CompletionKeys $word $ast $list | Should -Be $expected
