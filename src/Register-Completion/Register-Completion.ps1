@@ -1,10 +1,9 @@
-if (!$cache_all_completion) {
-  [hashtable]$cache_all_completion = [ordered]@{}
-}
+[hashtable]$cache_all_completion = @{}
 [hashtable]$cache_command_list = @{}
+$PSVersion = $PSVersionTable.PSVersion
 
 function Convert-JsonToHash {
-  Param([string]$json)
+  Param([PSCustomObject]$json)
   try {
     ConvertFrom-Json -InputObject $json -AsHashtable
   }
@@ -65,9 +64,36 @@ function Get-CompletionKeys {
   Sort-Object -Property @{Expression = { $_.ToString().StartsWith($wordToComplete) }; Descending = $true }, @{Expression = { $_.ToString().indexOf($wordToComplete) }; Descending = $false }, @{Expression = { $_ }; Descending = $false }
 }
 
+function Remove-Completion {
+  Param(
+    [Parameter(Mandatory)]
+    [string]$command
+  )
+  $cache_command_list.Remove($command)
+  if ($PSVersion -lt '7.0') {
+    $($cache_all_completion.Clone().Keys) |
+    Where-Object { $_.StartsWith("$command.") -or ($_ -eq $command) } |
+    ForEach-Object { $cache_all_completion.Remove($_) }
+  }
+  else {
+    $cache_all_completion.Keys |
+    Where-Object { $_.StartsWith("$command.") -or ($_ -eq $command) } |
+    ForEach-Object { $cache_all_completion.Remove($_) }
+  }
+}
+
 function Register-Completion {
-  Param($command, $hash_list)
-  $cache_command_list.add($command, $hash_list)
+  Param($command, $hash_list, [switch]$force = $false)
+
+  if ($cache_command_list.ContainsKey($command)) {
+    if ($force) {
+      Remove-Completion $command
+    }
+    else {
+      return
+    }
+  }
+  $cache_command_list.Add($command, $hash_list)
 
   Register-ArgumentCompleter -Native -CommandName $command -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
