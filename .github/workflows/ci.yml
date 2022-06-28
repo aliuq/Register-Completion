@@ -28,8 +28,9 @@ jobs:
           Invoke-Pester test -Output Detailed
         env:
           GITHUB_ACTIONS: true
-          
+
       - name: Run Pester test in PowerShell 5.x
+        if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
           Invoke-Pester test -Output Detailed
