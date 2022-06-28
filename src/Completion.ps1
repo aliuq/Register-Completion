@@ -1,5 +1,6 @@
 [hashtable]$CacheAllCompletions = @{}
 [hashtable]$CacheCommands = @{}
+$PSVersion = $PSVersionTable.PSVersion
 
 <#
 .SYNOPSIS
@@ -55,10 +56,19 @@ function ConvertTo-Hash {
   elseif ($inputType -eq [Object[]]) {
     $InputObject | ForEach-Object { $hash += ConvertTo-Hash $_ }
   }
+  elseif ($inputType -eq [System.Management.Automation.PSCustomObject]) {
+    $InputObject.psobject.Properties |
+    ForEach-Object { $hash[$_.Name] = ConvertTo-Hash $_.Value }
+  }
   else {
     try {
-      $json = ConvertFrom-Json -InputObject $InputObject -AsHashtable
-      if ($json.getType() -in [hashtable],[Object[]]) {
+      if ($PSVersion -lt "7.0") {
+        $json = ConvertFrom-Json -InputObject $InputObject
+      }
+      else {
+        $json = ConvertFrom-Json -InputObject $InputObject -AsHashtable
+      }
+      if ($json.getType() -in [hashtable],[Object[]],[System.Management.Automation.PSCustomObject]) {
         $hash = ConvertTo-Hash $json
       }
       else {
