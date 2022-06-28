@@ -2,7 +2,7 @@ Param(
   [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback')]
   [string]$action
 )
-$dir = ".\src\Register-Completion"
+$dir = ".\src"
 $current_version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
 
 function Set-SemverVersion {
