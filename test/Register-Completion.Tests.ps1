@@ -6,7 +6,7 @@ BeforeAll {
       [Hashtable]$HashObjectOne,
       [Hashtable]$HashObjectTwo
     )
-
+    
     if ($HashObjectOne.Count -ne $HashObjectTwo.Count) {
       return $false
     }
@@ -14,6 +14,9 @@ BeforeAll {
     $flag = $true
 
     foreach ($key in $HashObjectOne.Keys) {
+      # Check the key is valid
+      # Write-Host "key: $key"
+
       $hashOne = $HashObjectOne[$key]
       $hashTwo = $HashObjectTwo[$key]
 
@@ -78,6 +81,7 @@ Describe "ConvertTo-Hash" {
       Src = @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = @("arg3_1", "arg3_2")};
       Expected = @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = @{arg3_1 = ""; arg3_2 = ""}}
     }
+    @{ Type = "object"; Src = "{arg: 'arg_1'}"; Expected = @{arg = @{arg_1 = ""}} }
     @{
       Type = "object number、string、object、array";
       Src = "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2_2']}}]}";
