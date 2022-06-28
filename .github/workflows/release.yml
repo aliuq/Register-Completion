@@ -18,4 +18,4 @@ jobs:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
         shell: pwsh
         run: |
-          Publish-Module -Path ./src/Register-Completion -NuGetApiKey $env:NUGET_KEY -Verbose
+          Publish-Module -Path ./src -NuGetApiKey $env:NUGET_KEY -Verbose
