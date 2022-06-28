@@ -67,8 +67,8 @@ Register-Completion rc_object "
 
 `Register-Completion` module export the variables:
 
-+ `$cache_all_completion`: cache all the avaliable completion
-+ `$cache_command_list`: cache the register completion list
++ `$CacheAllCompletions`: cache all the avaliable completion
++ `$CacheCommands`: cache the register completion list
 
 ## License
 
