@@ -13,7 +13,7 @@ on:
   workflow_call:
 
 jobs:
-  ci-pwsh:
+  ci:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -22,19 +22,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Run Pester test
+      - name: Run Pester test in PowerShell 7.x
         shell: pwsh
         run: |
           Invoke-Pester test -Output Detailed
         env:
           GITHUB_ACTIONS: true
-
-  ci-powershell:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Pester test
+          
+      - name: Run Pester test in PowerShell 5.x
         shell: powershell
         run: |
           Invoke-Pester test -Output Detailed
