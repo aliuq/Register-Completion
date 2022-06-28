@@ -34,9 +34,6 @@
 .EXAMPLE
   ConvertTo-Hash @("arg1", @{arg2 = "arg2_1"; arg3 = @("arg3_1", "arg3_2")})
   Convert nested array to hashtable format
-.EXAMPLE
-  @("arg1", "arg2") | ConvertTo-Hash
-  Convert array to hashtable format by pipeline input
 .INPUTS
   None.
 .OUTPUTS
