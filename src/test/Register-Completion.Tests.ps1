@@ -13,12 +13,19 @@ BeforeAll {
 
     $result = $true
 
-    $hash_object_1.Keys | ForEach-Object {
-      $value_1 = $hash_object_1[$_]
-      $value_2 = $hash_object_2[$_]
+    foreach ($key in $hash_object_1.Keys) {
+      $hash_1 = $hash_object_1[$key]
+      $hash_2 = $hash_object_2[$key]
 
-      if ($value_1 -ne $value_2) {
+      if ($hash_1.getType() -in [object[]],[hashtable]) {
+        $result = Compare-Hashtable $hash_1 $hash_2
+      }
+      elseif ([string]::IsNullOrEmpty($hash_1) -And [string]::IsNullOrEmpty($hash_2)) {
+        continue
+      }
+      elseif ($hash_1 -ne $hash_2) {
         $result = $false
+        break
       }
     }
 
@@ -26,231 +33,329 @@ BeforeAll {
   }
 }
 
-Describe "Register-Completion" {
-  Context "Test function - Convert-JsonToHash" {
-    It "Convert type <type>" -ForEach @(
-      @{ type = 'number'; src = 100; expected = 100 }
-      @{ type = 'string 1'; src = "100"; expected = 100 }
-      @{ type = 'string 2'; src = "World"; expected = "World" }
-      @{ type = 'js array'; src = "['arg1','arg2','arg3']"; expected = "arg1","arg2","arg3" }
-      @{ type = 'powershell array 1'; src = 'arg1','arg2','arg3'; expected = "arg1","arg2","arg3" }
-      @{ type = 'powershell array 2'; src = @('arg1','arg2','arg3'); expected = "arg1","arg2","arg3" }
-      @{
-        type = 'js object';
-        src = "{ arg1: 'arg1_1', arg2: 'arg2_2' }";
-        expected = @{arg1 = 'arg1_1'; arg2 = 'arg2_2'}
-      }
-      @{
-        type = 'powershell hashtable';
-        src = @{arg1 = 'arg1_1'; arg2 = 'arg2_2'};
-        expected = @{arg1 = 'arg1_1'; arg2 = 'arg2_2'}
-      }
-    ) {
-      if ($type -in 'js object', 'powershell hashtable') {
-        $hash = Convert-JsonToHash $src
-        Compare-Hashtable $hash $expected | Should -Be $true
-      }
-      else {
-        Convert-JsonToHash $src | Should -Be $expected
-      }
+Describe "ConvertTo-Hash" {
+  It "convert <type>" -ForEach @(
+    @{ type = "string"; src = "arg"; expected = @{arg = ""} }
+    @{ type = "number"; src = 100; expected = @{100 = ""} }
+    @{ type = "number string"; src = "100"; expected = @{100 = ""} }
+    @{ type = "array number"; src = "[100]"; expected = @{100 = ""} }
+    @{ type = "array number"; src = "[100,101]"; expected = @{100 = ""; 101 = ""} }
+    @{ type = "array string"; src = "['hello']"; expected = @{hello = ""} }
+    @{ type = "array string"; src = "['hello','world']"; expected = @{hello = ""; world = ""} }
+    @{ type = "array object"; src = "[{arg: 'arg_1'}]"; expected = @{arg = @{arg_1 = ""}} }
+    @{
+      type = "array nested object";
+      src = "[{arg: {arg_1: 'arg_1_1'}}]";
+      expected = @{arg = @{arg_1 = @{arg_1_1 = ""}}}
     }
-  }
-
-  Context "Test function - Get-CompletionKeys" {
-    It "<type> | typing '<ast>' should complete '<expected>'" -ForEach @(
-      @{ type = "number"; word = ""; ast = "gc_number "; list = 100; "expected" = @(100) }
-      @{ type = "number"; word = "1"; ast = "gc_number 1"; list = 100; "expected" = @(100) }
-      @{ type = "number"; word = "1"; ast = "gc_number 1 "; list = 100; "expected" = @() }
-      @{ type = "number"; word = "2"; ast = "gc_number 2"; list = 100; "expected" = @() }
-      @{ type = "number"; word = "2"; ast = "gc_number 2 "; list = 100; "expected" = @() }
-      @{ type = 'string'; word = ""; ast = "gc_string_1 "; list = "100"; "expected" = @(100) }
-      @{ type = 'string'; word = "1"; ast = "gc_string_1 1"; list = "100"; "expected" = @(100) }
-      @{ type = 'string'; word = "1"; ast = "gc_string_1 1 "; list = "100"; "expected" = @() }
-      @{ type = 'string'; word = "2"; ast = "gc_string_1 2"; list = "100"; "expected" = @() }
-      @{ type = 'string'; word = "2"; ast = "gc_string_1 2 "; list = "100"; "expected" = @() }
-      @{ type = 'string'; word = ""; ast = "gc_string_2 "; list = "world"; "expected" = @("world") }
-      @{ type = 'string'; word = "w"; ast = "gc_string_2 w"; list = "world"; "expected" = @("world") }
-      @{ type = 'string'; word = "ld"; ast = "gc_string_2 ld"; list = "world"; "expected" = @("world") }
-      @{ type = 'string'; word = "w"; ast = "gc_string_2 w "; list = "world"; "expected" = @() }
-      @{ type = 'string'; word = "d"; ast = "gc_string_2 d "; list = "world"; "expected" = @() }
-      @{
-        type = "js array"; word = ""; ast = "gc_array_1 ";
-        list = "['arg1','arg2','arg3']";
-        expected = @('arg1','arg2','arg3')
-      }
-      @{
-        type = "js array"; word = "2"; ast = "gc_array_1 2";
-        list = "['arg1','arg2','arg3']";
-        expected = @("arg2")
-      }
-      @{
-        type = "js array"; word = "3"; ast = "gc_array_1 3 ";
-        list = "['arg1','arg2','arg3']";
-        expected = @()
-      }
-      @{
-        type = "powershell array"; word = ""; ast = "gc_array_2 ";
-        list = "arg1","arg2","arg3";
-        expected = @("arg1","arg2","arg3")
-      }
-      @{
-        type = "powershell array"; word = "2"; ast = "gc_array_2 2";
-        list = "arg1","arg2","arg3";
-        expected = @("arg2")
-      }
-      @{
-        type = "powershell array"; word = "3"; ast = "gc_array_2 3 ";
-        list = "arg1","arg2","arg3";
-        expected = @()
-      }
-      @{
-        type = "js object"; word = ""; ast = "gc_object ";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg1","arg2","arg3")
-      }
-      @{
-        type = "js object"; word = "2"; ast = "gc_object 2";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg2")
-      }
-      @{
-        type = "js object"; word = "arg2"; ast = "gc_object arg2";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg2")
-      }
-      @{
-        type = "js object"; word = "arg2"; ast = "gc_object arg2 ";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg2_2")
-      }
-      @{
-        type = "js object"; word = "arg3"; ast = "gc_object arg3 ";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg3_1","arg3_2")
-      }
-      @{
-        type = "js object"; word = "2"; ast = "gc_object arg3 2";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg3_2")
-      }
-      @{
-        type = "js object"; word = "arg3_2"; ast = "gc_object arg3 arg3_2 ";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg3_2_1")
-      }
-      @{
-        type = "js object"; word = "4"; ast = "gc_object arg2 4";
-        list = "{'arg1': 'arg1_1', 'arg2': 'arg2_2', 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @()
-      }
-      @{
-        type = "js object"; word = ""; ast = "gc_object_2 arg2 ";
-        list = "{'arg1': 'arg1_1', 'arg2': ['arg2_2_1', 'arg2_2_2'], 'arg3': {'arg3_1': 'arg3_1_1', 'arg3_2': 'arg3_2_1'}}"
-        expected = @("arg2_2_1", "arg2_2_2")
-      }
-      @{
-        type = "powershell hashtable"; word = ""; ast = "gc_hashtable ";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg1","arg2","arg3")
-      }
-      @{
-        type = "powershell hashtable"; word = "2"; ast = "gc_hashtable 2";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg2")
-      }
-      @{
-        type = "powershell hashtable"; word = "arg2"; ast = "gc_hashtable arg2";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg2")
-      }
-      @{
-        type = "powershell hashtable"; word = "arg2"; ast = "gc_hashtable arg2 ";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg2_2")
-      }
-      @{
-        type = "powershell hashtable"; word = "arg3"; ast = "gc_hashtable arg3 ";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg3_1","arg3_2")
-      }
-      @{
-        type = "powershell hashtable"; word = "2"; ast = "gc_hashtable arg3 2";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg3_2")
-      }
-      @{
-        type = "powershell hashtable"; word = "arg3_2"; ast = "gc_hashtable arg3 arg3_2 ";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg3_2_1")
-      }
-      @{
-        type = "powershell hashtable"; word = "4"; ast = "gc_hashtable arg2 4";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @()
-      }
-      @{
-        type = "powershell hashtable"; word = ""; ast = "gc_hashtable_2 arg2 ";
-        list = @{arg1 = "arg1_1"; arg2 = "arg2_2_1","arg2_2_2"; arg3 = @{arg3_1 = "arg3_1_1"; arg3_2 = "arg3_2_1"}}
-        expected = @("arg2_2_1", "arg2_2_2")
-      }
-    ) {
-      Get-CompletionKeys $word $ast $list | Should -Be $expected
+    @{
+      type = "array nested object array";
+      src = "[{arg: {arg_1: {arg_1_1: ['arg_1_1_1', 'arg_1_1_2']}}}]";
+      expected = @{arg = @{arg_1 = @{arg_1_1 = @{arg_1_1_1 = ""; arg_1_1_2 = ""}}}}
     }
-  }
-
-  Context "Test function - Register-Completion" {
-    It "register completion by force replace <type>" -ForEach @(
-      @{ type = "number"; src = 100; new_src = 1001 }
-      @{ type = "string"; src = "100"; new_src = "1001" }
-      @{ 
-        type = "js array";
-        src = "['arg1','arg2','arg3']";
-        new_src = "['arg1_new','arg2','arg3']"
-      }
-      @{ 
-        type = "powershell array";
-        src = 'arg1','arg2','arg3';
-        new_src = 'arg1_new','arg2','arg3'
-      }
-      @{ 
-        type = "js object";
-        src = "{ arg1: 'arg1_1', arg2: 'arg2_2' }";
-        new_src = "{ arg1: 'arg1_1_new', arg2_new: 'arg2_2' }"
-      }
-      @{ 
-        type = "powershell object";
-        src = @{arg1 = 'arg1_1'; arg2 = 'arg2_2'};
-        new_src = @{arg1 = 'arg1_1_new'; arg2_new = 'arg2_2'};
-      }
-    ) {
-      Register-Completion rcf $src
-      $cache_command_list["rcf"] | Should -Be $src
-      Register-Completion rcf $new_src
-      $cache_command_list["rcf"] | Should -Be $src
-      Register-Completion rcf $new_src -Force
-      $cache_command_list["rcf"] | Should -Be $new_src
-      Remove-Completion rcf
-      $cache_command_list["rcf"] | Should -Be $null
+    @{
+      type = "array number、string、object、array";
+      src = "[100, 'hello', {arg1: 'arg1_1'}, ['arg2', 'arg3']]";
+      expected = @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = ""}
     }
-  }
-
-  Context "Test variable - cache_command_list" {
-    BeforeAll {
-      Register-Completion rc_number 100
-      Register-Completion rc_string "100"
-      Register-Completion rc_js_array "['arg1', 'arg2', 'arg3']"
-      Register-Completion rc_powershell_array @('arg1', 'arg2', 'arg3')
-      Register-Completion rc_js_object "{ arg1: 'arg1_1', arg2: 'arg2_2' }"
-      Register-Completion rc_powershell_object @{arg1 = 'arg1_1'; arg2 = 'arg2_2'}
+    @{
+      type = "hashtable number、string、hashtable、list";
+      src = @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = ""}
+      expected = @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = ""}
     }
-    It "test cache_command_list count" {
-      $cache_command_list.Count | Should -Be 6
+    @{
+      type = "object number、string、object、array";
+      src = "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2_2']}}]}";
+      expected = @{a = @{1 = ""}; b = @{2 = ""}; c = @{c1 = ""; c2 = ""; c3 = @{c3_1 = @{c3_1_1 = ""}; c3_2 = @{c3_2_1 = ""; c3_2_2 = ""}}}}
     }
-    It "test Remove-Completion" {
-      Remove-Completion rc_number
-      $cache_command_list["rc_number"] | Should -Be $null
-      Remove-Completion "rc_js_object.arg2"
-      $cache_command_list.Count | Should -Be 5
-    }
+  ) {
+    $hash = ConvertTo-Hash $src
+    Compare-Hashtable $hash $expected | Should -Be $true
   }
 }
+
+Describe "Test Cases" {
+  It "test number" {
+    $list = 100
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be 100
+
+    Get-CompletionKeys "" "case" $list | Should -Be @(100)
+    Get-CompletionKeys "1" "case 1" $list | Should -Be @(100)
+    Get-CompletionKeys "" "case 1" $list | Should -Be @()
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case 2" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case 1001
+    $cache_command_list["case"] | Should -Be 100
+    Register-Completion case 1001 -Force
+    $cache_command_list.case | Should -Be 1001
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test number string" {
+    $list = "100"
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be "100"
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("100")
+    Get-CompletionKeys "1" "case 1" $list | Should -Be @("100")
+    Get-CompletionKeys "" "case 1" $list | Should -Be @()
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case 2" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case "1001"
+    $cache_command_list["case"] | Should -Be "100"
+    Register-Completion case "1001" -Force
+    $cache_command_list.case | Should -Be "1001"
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test string" {
+    $list = "world"
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be "world"
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("world")
+    Get-CompletionKeys "w" "case w" $list | Should -Be @("world")
+    Get-CompletionKeys "" "case w" $list | Should -Be @()
+    Get-CompletionKeys "c" "case c" $list | Should -Be @()
+    Get-CompletionKeys "" "case c" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case "world new"
+    $cache_command_list["case"] | Should -Be "world"
+    Register-Completion case "world new" -Force
+    $cache_command_list.case | Should -Be "world new"
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test <type>" -ForEach @(
+    @{
+      type = "js array";
+      list = "['arg1','arg2','arg3']"
+      list_new = "['arg1_new','arg2_new','arg3_new']"
+    }
+    @{
+      type = "powershell list";
+      list = "arg1","arg2","arg3"
+      list_new = "arg1_new","arg2_new","arg3_new"
+    }
+  ) {
+    $list = "['arg1','arg2','arg3']"
+    $list_new = "['arg1_new','arg2_new','arg3_new']"
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be $list
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("arg1","arg2","arg3")
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @("arg2")
+    Get-CompletionKeys "" "case w" $list | Should -Be @()
+    Get-CompletionKeys "c" "case c" $list | Should -Be @()
+    Get-CompletionKeys "" "case c" $list | Should -Be @()
+    Get-CompletionKeys "arg1" "case arg1" $list | Should -Be @("arg1")
+    Get-CompletionKeys "" "case arg1" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case $list_new
+    $cache_command_list["case"] | Should -Be $list
+    Register-Completion case $list_new -Force
+    $cache_command_list.case | Should -Be $list_new
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test <type>" -ForEach @(
+    @{
+      type = "js object";
+      list = "{
+        'arg1': 'arg1_1',
+        'arg2': 'arg2_2',
+        'arg3': {
+          'arg3_1': 'arg3_1_1',
+          'arg3_2': 'arg3_2_1'
+        }
+      }";
+      list_new = "{
+        'arg1': 'arg1_1_new',
+        'arg2_new': 'arg2_2',
+        'arg3': {
+          'arg3_1': 'arg3_1_1_new',
+          'arg3_2_new': 'arg3_2_1'
+        }
+      }"
+    }
+    @{
+      type = "powershell hashtable";
+      list = @{
+        arg1 = "arg1_1";
+        arg2 = "arg2_2";
+        arg3 = @{
+          arg3_1 = "arg3_1_1";
+          arg3_2 = "arg3_2_1"
+        }
+      };
+      list_new = @{
+        arg1 = "arg1_1_new";
+        arg2_new = "arg2_2";
+        arg3 = @{
+          arg3_1 = "arg3_1_1_new";
+          arg3_2_new = "arg3_2_1"
+        }
+      }
+    }
+  ) {
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be $list
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("arg1","arg2","arg3")
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @("arg2")
+    Get-CompletionKeys "" "case 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case arg3" $list | Should -Be @("arg3_1", "arg3_2")
+    Get-CompletionKeys "2" "case arg3 2" $list | Should -Be @("arg3_2")
+    Get-CompletionKeys "1" "case arg3 arg3_1 1" $list | Should -Be @("arg3_1_1")
+    Get-CompletionKeys "" "case arg3 arg3_1 1" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case $list_new
+    $cache_command_list["case"] | Should -Be $list
+    Register-Completion case $list_new -Force
+    $cache_command_list.case | Should -Be $list_new
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test <type>" -ForEach @(
+    @{
+      type = "js object array";
+      list = "{
+        'arg1': [
+          'arg1_1',
+          { arg1_2: 'arg1_2_1' }
+        ],
+        'arg2': 'arg2_2',
+        'arg3': {
+          'arg3_1': ['arg3_1_1', 'arg3_1_2'],
+          'arg3_2': 'arg3_2_1'
+        }
+      }";
+      list_new = "{
+        'arg1_new': [
+          'arg1_1',
+          { arg1_2: 'arg1_2_1' }
+        ],
+        'arg2': 'arg2_2_new',
+        'arg3': {
+          'arg3_1': ['arg3_1_1_new', 'arg3_1_2'],
+          'arg3_2': 'arg3_2_1'
+        }
+      }"
+    }
+    @{
+      type = "powershell hashtable list";
+      list = @{
+        arg1 = "arg1_1",@{arg1_2 = "arg1_2_1"};
+        arg2 = "arg2_2";
+        arg3 = @{
+          arg3_1 = "arg3_1_1", "arg3_1_2";
+          arg3_2 = "arg3_2_1"
+        }
+      };
+      list_new = @{
+        arg1_new = "arg1_1",@{arg1_2 = "arg1_2_1"};
+        arg2 = "arg2_2_new";
+        arg3 = @{
+          arg3_1 = "arg3_1_1_new", "arg3_1_2";
+          arg3_2 = "arg3_2_1"
+        }
+      }
+    }
+  ) {
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be $list
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("arg1","arg2","arg3")
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @("arg2")
+    Get-CompletionKeys "" "case 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case arg1" $list | Should -Be @("arg1_1", "arg1_2")
+    Get-CompletionKeys "2" "case arg1 2" $list | Should -Be @("arg1_2")
+    Get-CompletionKeys "" "case arg1 arg1_2" $list | Should -Be @("arg1_2_1")
+    Get-CompletionKeys "1" "case arg1 arg1_2 1" $list | Should -Be @("arg1_2_1")
+    Get-CompletionKeys "" "case arg1 arg1_2 1" $list | Should -Be @()
+    Get-CompletionKeys "1" "case arg3 1" $list | Should -Be @("arg3_1")
+    Get-CompletionKeys "" "case arg3 1" $list | Should -Be @()
+    Get-CompletionKeys "" "case arg3 arg3_1" $list | Should -Be @("arg3_1_1", "arg3_1_2")
+    Get-CompletionKeys "2" "case arg3 arg3_1 2" $list | Should -Be @("arg3_1_2")
+    Get-CompletionKeys "" "case arg3 arg3_1 2" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case $list_new
+    $cache_command_list["case"] | Should -Be $list
+    Register-Completion case $list_new -Force
+    $cache_command_list.case | Should -Be $list_new
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+
+  It "test <type>" -ForEach @(
+    @{
+      type = "js array object";
+      list = "[
+        'arg1',
+        { 'arg2': 'arg2_2' },
+        ['arg3', {'arg4': 'arg4_1'}]
+      ]";
+      list_new = "[
+        'arg1',
+        { 'arg2': 'arg2_2_new' },
+        ['arg3', {'arg4_new': 'arg4_1'}]
+      ]"
+    }
+    @{
+      type = "powershell list hashtable";
+      list = @(
+        'arg1',
+        @{ arg2 = "arg2_2" },
+        @('arg3', @{arg4 = "arg4_1"})
+      );
+      list_new = @(
+        'arg1',
+        @{ arg2 = "arg2_2_new" },
+        @('arg3', @{arg4_new = "arg4_1"})
+      )
+    }
+  ) {
+    Register-Completion case $list
+    $cache_command_list["case"] | Should -Be $list
+
+    Get-CompletionKeys "" "case" $list | Should -Be @("arg1","arg2","arg3","arg4")
+    Get-CompletionKeys "2" "case 2" $list | Should -Be @("arg2")
+    Get-CompletionKeys "" "case 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case arg2" $list | Should -Be @("arg2_2")
+    Get-CompletionKeys "2" "case arg2 2" $list | Should -Be @("arg2_2")
+    Get-CompletionKeys "" "case arg2 2" $list | Should -Be @()
+    Get-CompletionKeys "" "case arg4" $list | Should -Be @("arg4_1")
+    Get-CompletionKeys "" "case arg4 2" $list | Should -Be @()
+
+    $cache_all_completion["case"] | Should -Be $((ConvertTo-Hash $list).Keys)
+    Register-Completion case $list_new
+    $cache_command_list["case"] | Should -Be $list
+    Register-Completion case $list_new -Force
+    $cache_command_list.case | Should -Be $list_new
+    Remove-Completion case
+    $cache_command_list["case"] | Should -Be $null
+    $cache_all_completion["case"] | Should -Be $null
+  }
+}
+
+
