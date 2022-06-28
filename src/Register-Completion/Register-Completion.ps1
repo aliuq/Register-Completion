@@ -2,26 +2,45 @@
 [hashtable]$cache_command_list = @{}
 $PSVersion = $PSVersionTable.PSVersion
 
-function Convert-JsonToHash {
-  Param([PSCustomObject]$json)
-  try {
-    ConvertFrom-Json -InputObject $json -AsHashtable
+function ConvertTo-Hash {
+  Param([PSCustomObject]$InputObject)
+  [hashtable]$hash = @{}
+
+  if (!$InputObject) {
+    return ""
   }
-  catch {
-    $json
+
+  $input_type = $InputObject.getType()
+
+  if ($input_type -eq [hashtable]) {
+    $InputObject.Keys | ForEach-Object { $hash[$_] = ConvertTo-Hash $InputObject[$_] }
   }
+  elseif ($input_type -eq [Object[]]) {
+    $InputObject | ForEach-Object { $hash += ConvertTo-Hash $_ }
+  }
+  else {
+    try {
+      $json = ConvertFrom-Json -InputObject $InputObject -AsHashtable
+      $json_type = $json.getType()
+      if ($json_type -in [hashtable],[Object[]]) {
+        $hash = ConvertTo-Hash $json
+      }
+      else {
+        $hash.Add($json, "")
+      }
+    }
+    catch {
+      $hash.Add($InputObject, "")
+    }
+  }
+  return $hash
 }
 
 function Get-CompletionKeys {
-  # hashtable or array
   Param($word, $ast, $hash_list)
 
   if (!$hash_list) {
     return @()
-  }
-
-  if ($hash_list.getType -And ($hash_list.getType() -eq [string])) {
-    $hash_list = Convert-JsonToHash $hash_list
   }
 
   $arr = $ast.ToString().Split().ToLower() | Where-Object { $_ -ne $null }
@@ -38,7 +57,7 @@ function Get-CompletionKeys {
   }
 
   if (!$cache_all_completion.ContainsKey($key)) {
-    $map = $hash_list
+    $map = ConvertTo-Hash $hash_list
     $prefix = ""
     $key_level | ForEach-Object {
       if ($prefix) {
@@ -49,12 +68,7 @@ function Get-CompletionKeys {
         $prefix = $_
       }
       if (!$cache_all_completion.ContainsKey($prefix)) {
-        if ($map.Keys) {
-          $cache_all_completion[$prefix] = $map.Keys
-        }
-        else {
-          $cache_all_completion[$prefix] = $map
-        }
+        $cache_all_completion[$prefix] = $map.Keys
       }
     }
   }
@@ -65,28 +79,19 @@ function Get-CompletionKeys {
 }
 
 function Remove-Completion {
-  Param(
-    [Parameter(Mandatory)]
-    [string]$command
-  )
+  Param([Parameter(Mandatory)][string]$command)
+
   $cache_command_list.Remove($command)
-  if ($PSVersion -lt '7.0') {
-    $($cache_all_completion.Clone().Keys) |
+  $cache_all_completion.Clone().Keys |
     Where-Object { $_.StartsWith("$command.") -or ($_ -eq $command) } |
     ForEach-Object { $cache_all_completion.Remove($_) }
-  }
-  else {
-    $cache_all_completion.Keys |
-    Where-Object { $_.StartsWith("$command.") -or ($_ -eq $command) } |
-    ForEach-Object { $cache_all_completion.Remove($_) }
-  }
 }
 
 function Register-Completion {
-  Param($command, $hash_list, [switch]$force = $false)
+  Param($command, $hash_list, [switch]$Force = $false)
 
   if ($cache_command_list.ContainsKey($command)) {
-    if ($force) {
+    if ($Force) {
       Remove-Completion $command
     }
     else {
