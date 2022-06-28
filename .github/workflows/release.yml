@@ -22,4 +22,4 @@ jobs:
         shell: pwsh
         run: |
           mv ./src ./Register-Completion
-          ls ./
+          Publish-Module -Path ./Register-Completion -NuGetApiKey $env:NUGET_KEY -Verbose
