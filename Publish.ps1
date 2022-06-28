@@ -1,5 +1,5 @@
 Param(
-  [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback')]
+  [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback', 'rollback-commit-local', 'rollback-commit')]
   [string]$action
 )
 $dir = ".\src"
@@ -62,6 +62,12 @@ elseif ($action -in 'rollback', 'rollback-local') {
   git tag -d "v$version"
   if ($action -eq 'rollback') {
     git push origin ":refs/tags/v$version"
+    git push -f
+  }
+}
+elseif ($action -in 'rollback-commit', 'rollback-commit-local') {
+  git reset --hard HEAD~1
+  if ($action -eq 'rollback-commit') {
     git push -f
   }
 }
