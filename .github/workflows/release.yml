@@ -6,11 +6,12 @@ on:
       - 'v*'
 
 jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
   publish-to-gallery:
     runs-on: ubuntu-latest
+    needs: test
     steps:
-      - name: Run test before
-        uses: ./.github/workflows/ci.yml
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
