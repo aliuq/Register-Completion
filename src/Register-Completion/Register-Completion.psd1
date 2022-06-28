@@ -24,10 +24,10 @@ GUID = '9628389e-7e96-4fd0-94ed-004bdd2f3f95'
 Author = 'aliuq'
 
 # Company or vendor of this module
-CompanyName = 'Unknown'
+CompanyName = ''
 
 # Copyright statement for this module
-Copyright = '(c) aliuq. All rights reserved.'
+Copyright = '(c) 2022 aliuq. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Easy to register tab completions with data structures. Easy to customize.'
@@ -69,7 +69,7 @@ PowerShellVersion = '5.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Convert-JsonToHash', 'Get-CompletionKeys', 'Register-Completion'
+FunctionsToExport = 'ConvertTo-Hash', 'Get-CompletionKeys', 'Register-Completion'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'register','completion','auto-completion'
+        Tags = 'register','completion','auto-completion','tab-completion','tab'
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/aliuq/Register-Completion/blob/master/LICENSE'
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/aliuq/Register-Completion/blob/master/CHANGELOG.md'
 
         # Prerelease string of this module
         # Prerelease = ''
