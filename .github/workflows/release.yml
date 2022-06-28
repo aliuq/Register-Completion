@@ -4,10 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: ['CI']
+    branches: ['master']
+    types: [completed]
 
 jobs:
   publish-to-gallery:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -19,4 +24,4 @@ jobs:
         shell: pwsh
         run: |
           mv ./src ./Register-Completion
-          Publish-Module -Path ./Register-Completion -NuGetApiKey $env:NUGET_KEY -Verbose
+          ls ./
