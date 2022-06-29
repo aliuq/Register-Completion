@@ -67,6 +67,10 @@ New-Completion nc @("arg1", "arg2") -Force
 New-Completion nc @("arg1", @{arg2 = "arg2_1"; arg3 = @("arg3_1", "arg3_2")}) -Force
 New-Completion nc @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = @("arg3_1", "arg3_2")} -Force
 New-Completion nc "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2_2']}}]}" -Force
+New-Completion nc "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2_2']}}]}" -filter {
+   Param($Keys, $Word)
+   $Keys | Where-Object { $_ -Like "*$Word*" } | Sort-Object -Descending
+} -Force
 ```
 
 ## Global Variables
