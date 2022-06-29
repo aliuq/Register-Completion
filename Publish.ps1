@@ -7,7 +7,7 @@
 
 Param(
   [Parameter(Mandatory, Position=0)]
-  [ValidateSet('release', 'reset')]
+  [ValidateSet('release', 'reset', 'help')]
   [string]$Action,
   [switch]$Patch,
   [switch]$Minor,
@@ -50,7 +50,14 @@ function Set-SemverVersion {
   return $ver
 }
 
-if ($Action -eq 'release') {
+if ($Action -eq 'help') {
+  Write-Host "Helper script:"
+  @{
+    "1" = ".\Publish.ps1 release -Patch -Commit -Tag"
+    "2" = ".\Publish.ps1 reset -Tag"
+  } | % { new-object PSObject -Property $_} | Format-List
+}
+elseif ($Action -eq 'release') {
   if ($Patch) { $newVersion = Set-SemverVersion $currentVersion -patch }
   elseif ($Minor) { $newVersion = Set-SemverVersion $currentVersion -minor }
   elseif ($Major) { $newVersion = Set-SemverVersion $currentVersion -major }
