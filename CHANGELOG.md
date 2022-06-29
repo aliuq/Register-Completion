@@ -1,3 +1,12 @@
+# [](https://github.com/aliuq/Register-Completion/compare/v0.0.19...v) (2022-06-29)
+
+
+### Features
+
+* support custom filter keys function ([2675d81](https://github.com/aliuq/Register-Completion/commit/2675d815eb9b99ba38d232bed2ec4b0c2a6c2f77))
+
+
+
 # [](https://github.com/aliuq/Register-Completion/compare/v0.0.18...v) (2022-06-29)
 
 
