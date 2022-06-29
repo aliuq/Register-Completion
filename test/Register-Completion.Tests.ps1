@@ -373,6 +373,33 @@ Describe "Test Cases" {
     $CacheCommands["case"] | Should -Be $null
     $CacheAllCompletions["case"] | Should -Be $null
   }
+
+  It "test custom filter function" {
+    $npmCmds = "
+      {
+      'access': ['public', { grant: ['read-only', 'read-write'] }, 'edit', '--help'],
+      '--help': ''
+      }
+    "
+
+    New-Completion npm $npmCmds -filter {
+      Param($Keys, $Word)
+      $Keys | Where-Object { $_ -Like "*$Word*" } | Sort-Object -Descending
+    }
+
+    $CacheCommands["npm"] | Should -Be $npmCmds
+    $CacheCommands["npm--filter"] | Should -Be $true
+
+    Get-CompletionKeys "" "npm" $npmCmds | Should -Be @("access","--help")
+    Get-CompletionKeys "g" "npm access g" $npmCmds | Should -Be @("grant")
+    Get-CompletionKeys "" "npm access grant" $npmCmds | Should -Be @("read-only","read-write")
+
+    $CacheAllCompletions["npm"] | Should -Be $((ConvertTo-Hash $npmCmds).Keys)
+    Remove-Completion npm
+    $CacheCommands["npm"] | Should -Be $null
+    $CacheCommands["npm--filter"] | Should -Be $null
+    $CacheAllCompletions["npm"] | Should -Be $null
+  }
 }
 
 
