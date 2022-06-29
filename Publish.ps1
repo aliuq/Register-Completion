@@ -1,9 +1,29 @@
+<#
+.SYNOPSIS
+  Helper publish script
+.DESCRIPTION
+  Helper script to publish or reset commits to the remote repository.
+#>
+
 Param(
   [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback', 'rollback-commit-local', 'rollback-commit')]
-  [string]$action
+  [Parameter(Mandatory, Position=0)]
+  [ValidateSet('release', 'reset')]
+  [string]$Action,
+  [switch]$Patch,
+  [switch]$Minor,
+  [switch]$Major,
+  [switch]$Commit,
+  [switch]$Tag
 )
+
 $dir = ".\src"
-$current_version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
+$currentVersion = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
+
+@{
+  "PowerShell Version" = $PSVersionTable.PSVersion;
+  "Module Version" = $currentVersion
+} | % { new-object PSObject -Property $_} | Format-List
 
 function Set-SemverVersion {
   param(
@@ -31,44 +51,50 @@ function Set-SemverVersion {
   return $ver
 }
 
-if ($action -in 'release','release-patch','release-minor','release-major') {
-  switch ($action) {
-    release { $new_version = Read-Host "Input a new version(v$current_version)" }
-    release-patch { $new_version = Set-SemverVersion $current_version -patch }
-    release-minor { $new_version = Set-SemverVersion $current_version -minor }
-    release-major { $new_version = Set-SemverVersion $current_version -major }
-  }
+if ($Action -eq 'release') {
+  if ($Patch) { $newVersion = Set-SemverVersion $currentVersion -patch }
+  elseif ($Minor) { $newVersion = Set-SemverVersion $currentVersion -minor }
+  elseif ($Major) { $newVersion = Set-SemverVersion $currentVersion -major }
+  else { $newVersion = Read-Host "Input a new version(v$currentVersion)" }
 
-  $confirm = Read-Host "Confirm to release v$($new_version)(previous v$($current_version))?(y/n)" [Char]
+  $confirm = Read-Host "Confirm to release v$($newVersion)(previous v$($currentVersion))?(y/n)" [Char]
 
   if ($confirm -eq 'y') {
-    Update-ModuleManifest -Path "$dir\Register-Completion.psd1" -ModuleVersion $new_version
+    Update-ModuleManifest -Path "$dir\Register-Completion.psd1" -ModuleVersion $newVersion
     npx standard-changelog
 
-    git add "$dir\Register-Completion.psd1" CHANGELOG.md
-    git commit -m "Release v$new_version"
-    git tag --annotate --message "v$new_version" v$new_version
-
-    $confirm_push = Read-Host "Confirm to push?(y/n)" [Char]
-    if ($confirm_push -eq 'y') {
-      git push
-      git push --tags
+    if ($Commit) {
+      git add "$dir\Register-Completion.psd1" CHANGELOG.md
+      git commit -m "Release v$newVersion"
+    }
+    if ($Tag) {
+      git tag --annotate --message "v$newVersion" v$newVersion
+    }
+    $comfirmPush = Read-Host "Confirm to push?(y/n)" [Char]
+    if ($comfirmPush -eq 'y') {
+      if ($Commit) {
+        git push
+      }
+      if ($Tag) {
+        git push --tags
+      }
     }
   }
 }
-elseif ($action -in 'rollback', 'rollback-local') {
+elseif ($Action -eq 'reset') {
   $version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
-  git reset --hard HEAD~1
-  git tag -d "v$version"
-  if ($action -eq 'rollback') {
-    git push origin ":refs/tags/v$version"
-    git push -f
+  $comfirmPush = Read-Host "Are you sure reset the version($version)?(y/n)" [Char]
+  if ($comfirmPush -eq 'y') {
+    git reset --hard HEAD~1
+    if ($Tag) {
+      git tag -d "v$version"
+    }
+    $comfirmPushRemote = Read-Host "Are you sure reset the version($version) to remote?(y/n)" [Char]
+    if ($comfirmPushRemote -eq 'y') {
+      git push -f
+      if ($Tag) {
+        git push origin ":refs/tags/v$version"
+      }
+    }
   }
 }
-elseif ($action -in 'rollback-commit', 'rollback-commit-local') {
-  git reset --hard HEAD~1
-  if ($action -eq 'rollback-commit') {
-    git push -f
-  }
-}
-
