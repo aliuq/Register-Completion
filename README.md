@@ -9,66 +9,52 @@ Easy to register tab completions with data structures. Easy to customize.
 ## Install
 
 ```Powershell
+# Install
 Install-Module Register-Completion -Scope CurrentUser
-```
-
-## Simple Usage
-
-In your terminal, type the below command to trying the completion.
-
-First, import module
-
-```Powershell
+# Import
 Import-Module Register-Completion
 ```
 
-Second, register the completion
+## Usage
+
+`New-Completion [[-Command] <String>] [[-HashList] <Object>] [-Force]`
+
++ Param `HashList`, allows basic type number、string、array、hashtable、object or nested types.
++ Param `-Force` to force a replacement when a completion exists
+
+Run `Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete` in current terminal, this will enable to see all avaliable tab completion keys.
+
+Let us start the first completion, then press `nc <Tab>`
 
 ```Powershell
-Register-Completion demo 'arg1','arg2','arg3'
+New-Completion nc 'arg1','arg2','arg3'
 ```
 
-Third, typing `demo ⇥` to see the completion, you will see the result `demo arg1`, the completions's first option.
-
-## Full Usage
-
-Use `-Force` to force a replacement when a completion exists
+Other `HashList` types to see the below examples.
 
 ```Powershell
-Register-Completion rc_number 100
-# type `rc_number ⇥` will get 1001
-Register-Completion rc_number 1001 -Force
-Register-Completion rc_string "hello world"
-Register-Completion rc_list 'arg1','arg2','arg3'
-# powershell version >= 7.0.0
-Register-Completion rc_array '["arg1","arg2","arg3"]'
-Register-Completion rc_hashtable @{
- arg1 = 'arg1_1'; 
- arg2 = 'arg2_2'; 
- arg3 = @{
-  arg3_1 = 'arg3_1_1';
-  arg3_2 = 'arg3_2_1'
-  }
-}
-# powershell version >= 7.0.0
-Register-Completion rc_object "
-{
- 'arg1': 'arg1_1',
- 'arg2': 'arg2_2',
- 'arg3': {
-  'arg3_1': 'arg3_1_1',
-  'arg3_2': 'arg3_2_1'
- }
-}
-"
+New-Completion nc 100
+New-Completion nc "1001" -Force
+New-Completion nc "hello world" -Force
+New-Completion nc "[100]" -Force
+New-Completion nc "[100,101]" -Force
+New-Completion nc 'arg1','arg2','arg3' -Force
+New-Completion nc '["arg1","arg2","arg3"]' -Force
+New-Completion nc "[{arg: 'arg_1'}]" -Force
+New-Completion nc "[{arg: {arg_1: 'arg_1_1'}}]" -Force
+New-Completion nc "[{arg: {arg_1: {arg_1_1: ['arg_1_1_1', 'arg_1_1_2']}}}]" -Force
+New-Completion nc "[100, 'hello', {arg1: 'arg1_1'}, ['arg2', 'arg3']]" -Force
+New-Completion nc @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = ""} -Force
+New-Completion nc @("arg1", "arg2") -Force
+New-Completion nc @("arg1", @{arg2 = "arg2_1"; arg3 = @("arg3_1", "arg3_2")}) -Force
+New-Completion nc @{100 = ""; hello = ""; arg1 = @{arg1_1 = ""}; arg2 = ""; arg3 = @("arg3_1", "arg3_2")} -Force
+New-Completion nc "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2_2']}}]}" -Force
 ```
 
-## More Info
+## Global Variables
 
-`Register-Completion` module export the variables:
-
-+ `$CacheAllCompletions`: cache all the avaliable completion
-+ `$CacheCommands`: cache the register completion list
++ `$CacheAllCompletions`: Cached all you typed completions, e.g. `nc <Tab>`
++ `$CacheCommands`: Cached all commands and hashlists from `New-Completion`
 
 ## License
 
