@@ -1,5 +1,10 @@
 # Register-Completion
 
+![GitHub](https://img.shields.io/github/license/aliuq/Register-Completion)
+![Github Action](https://img.shields.io/github/workflow/status/aliuq/Register-Completion/CI)
+![powershellgallery downloads](https://img.shields.io/powershellgallery/dt/Register-Completion)
+![powershellgallery version](https://img.shields.io/powershellgallery/v/Register-Completion?include_prereleases)
+
 Easy to register tab completions with fixed data structures. Easy to customize.
 
 > **Note**  
@@ -12,6 +17,20 @@ Easy to register tab completions with fixed data structures. Easy to customize.
 Install-Module Register-Completion -Scope CurrentUser
 # Import
 Import-Module Register-Completion
+```
+
+Add in profile
+
+```Powershell
+# Powershell 7.x
+pwsh
+notepad $profile
+# Add `Import-Module Register-Completion` in top of file
+
+# Powershell 5.x
+powershell
+notepad $profile
+# Add `Import-Module Register-Completion` in top of file
 ```
 
 ## Usage
