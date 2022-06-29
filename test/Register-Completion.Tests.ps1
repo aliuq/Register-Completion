@@ -378,28 +378,29 @@ Describe "Test Cases" {
     $npmCmds = "
       {
       'access': ['public', { grant: ['read-only', 'read-write'] }, 'edit', '--help'],
-      '--help': ''
+      '--help': '',
+      'add': ['--help']
       }
     "
 
-    New-Completion npm $npmCmds -filter {
+    New-Completion case $npmCmds -filter {
       Param($Keys, $Word)
       $Keys | Where-Object { $_ -Like "*$Word*" } | Sort-Object -Descending
     }
 
-    $CacheCommands["npm"] | Should -Be $npmCmds
-    $CacheCommands["npm--filter"] | Should -Be $true
+    $CacheCommands["case"] | Should -Be $npmCmds
+    $CacheCommands["case--filter"] | Should -Be $true
 
-    Get-CompletionKeys "" "npm" $npmCmds | Should -Be @("access","--help")
-    Get-CompletionKeys "g" "npm access g" $npmCmds | Should -Be @("grant")
-    Get-CompletionKeys "" "npm access grant" $npmCmds | Should -Be @("read-only","read-write")
+    Get-CompletionKeys "" "case" $npmCmds | Should -Be @("access","add","--help")
+    Get-CompletionKeys "g" "case access g" $npmCmds | Should -Be @("grant")
+    Get-CompletionKeys "" "case access grant" $npmCmds | Should -Be @("read-only","read-write")
+    Get-CompletionKeys "t" "case access t" $npmCmds | Should -Be @("edit","grant")
+    Get-CompletionKeys "" "case access t" $npmCmds | Should -Be @()
 
-    $CacheAllCompletions["npm"] | Should -Be $((ConvertTo-Hash $npmCmds).Keys)
-    Remove-Completion npm
-    $CacheCommands["npm"] | Should -Be $null
-    $CacheCommands["npm--filter"] | Should -Be $null
-    $CacheAllCompletions["npm"] | Should -Be $null
+    $CacheAllCompletions["case"] | Should -Be $((ConvertTo-Hash $npmCmds).Keys)
+    Remove-Completion case
+    $CacheCommands["case"] | Should -Be $null
+    $CacheCommands["case--filter"] | Should -Be $null
+    $CacheAllCompletions["case"] | Should -Be $null
   }
 }
-
-
