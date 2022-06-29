@@ -1,3 +1,13 @@
+# [](https://github.com/aliuq/Register-Completion/compare/v0.0.18...v) (2022-06-29)
+
+
+### Bug Fixes
+
+* fixed wrong key in  powershell 5 ([87c30c2](https://github.com/aliuq/Register-Completion/commit/87c30c22ab469a6d58a8c800dce15fb50785c1d9))
+* remove unsupported example ([12af8d1](https://github.com/aliuq/Register-Completion/commit/12af8d15eaa316bbc37fb37e7e82b40e8791b036))
+
+
+
 # [](https://github.com/aliuq/Register-Completion/compare/v0.0.17...v) (2022-06-28)
 
 
