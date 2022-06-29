@@ -6,7 +6,6 @@
 #>
 
 Param(
-  [ArgumentCompletions('release', 'release-patch', 'release-minor', 'release-major', 'rollback-local', 'rollback', 'rollback-commit-local', 'rollback-commit')]
   [Parameter(Mandatory, Position=0)]
   [ValidateSet('release', 'reset')]
   [string]$Action,
