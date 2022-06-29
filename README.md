@@ -1,12 +1,11 @@
 # Register-Completion
 
-Easy to register tab completions with data structures. Easy to customize.
+Easy to register tab completions with fixed data structures. Easy to customize.
 
-> **Note**
->
+> **Note**  
 > Recommeded Powershell version 7.0.0 or higher.
 
-## Install
+## Installation
 
 ```Powershell
 # Install
@@ -30,7 +29,7 @@ Let us start the first completion, then press `nc <Tab>`
 New-Completion nc 'arg1','arg2','arg3'
 ```
 
-Other `HashList` types to see the below examples.
+Other `HashList` types to see the below examples. `-Force` let us can force to replacement a exist command.
 
 ```Powershell
 New-Completion nc 100
