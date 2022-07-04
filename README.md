@@ -54,7 +54,7 @@ Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete
 + `-Where`: Custom filter function
 + `-Sort`: Custom sort function
 
-`Register-Completion` is usually used for tab completion of cli commands, but it goes beyond that, there are two types of tab completions: Known datas and dynamic datas.
+`Register-Completion` is usually used for tab completion of cli commands, but it goes beyond that, there are two types of tab completions: known datas and dynamic datas.
 
 For known datas, use `New-Completion` can easily to register a completion. just need to construct the correct data format, example using part of the `npm` command:
 
