@@ -1,8 +1,12 @@
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.22...v) (2022-07-04)
+# Change Log
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.21...v) (2022-07-04)
+## [0.0.23-beta1](https://github.com/aliuq/Register-Completion/compare/v0.0.22...v0.0.23-beta1) (2022-07-04)
+
+
+
+## [0.0.22](https://github.com/aliuq/Register-Completion/compare/v0.0.21...v0.0.22) (2022-07-04)
 
 
 ### Bug Fixes
@@ -11,7 +15,7 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.20...v) (2022-07-04)
+## [0.0.21](https://github.com/aliuq/Register-Completion/compare/v0.0.20...v0.0.21) (2022-07-04)
 
 
 ### Bug Fixes
@@ -25,7 +29,7 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.19...v) (2022-06-29)
+## [0.0.20](https://github.com/aliuq/Register-Completion/compare/v0.0.19...v0.0.20) (2022-06-29)
 
 
 ### Features
@@ -34,7 +38,7 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.18...v) (2022-06-29)
+## [0.0.19](https://github.com/aliuq/Register-Completion/compare/v0.0.18...v0.0.19) (2022-06-29)
 
 
 ### Bug Fixes
@@ -44,7 +48,7 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.17...v) (2022-06-28)
+## [0.0.18](https://github.com/aliuq/Register-Completion/compare/v0.0.17...v0.0.18) (2022-06-28)
 
 
 ### Bug Fixes
@@ -58,7 +62,7 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.16...v) (2022-06-27)
+## [0.0.17](https://github.com/aliuq/Register-Completion/compare/v0.0.16...v0.0.17) (2022-06-27)
 
 
 ### Bug Fixes
@@ -67,12 +71,11 @@
 
 
 
-# [](https://github.com/aliuq/Register-Completion/compare/v0.0.15...v) (2022-06-27)
+## [0.0.16](https://github.com/aliuq/Register-Completion/compare/v0.0.15...v0.0.16) (2022-06-27)
 
 
 
-#  (2022-06-26)
-
+## 0.0.15 (2022-06-26)
 
 
 
