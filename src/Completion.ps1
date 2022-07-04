@@ -201,14 +201,36 @@ function Get-CompletionKeys {
       $keyArrs = & $Sort $keyArrs
     }
   }
-  $keyArrs
+  $keyArrs | Where-Object { $_.Key.ToString().ToLower() -notin $keywords }
 }
 
+<#
+.SYNOPSIS
+  Remove a completion.
+.DESCRIPTION
+  According to input command, remove the completion.
+.PARAMETER Command
+  The command name. use dot to separate the command name.
+.EXAMPLE
+  Remove-Completion nc
+.EXAMPLE
+  Remove-Completion 'nc.hello'
+.INPUTS
+  None.
+.OUTPUTS
+  None.
+.LINK
+  https://github.com/aliuq/Register-Completion
+#>
 function Remove-Completion {
   Param([string]$Command)
 
-  $CacheCommands.Remove($Command)
-  $CacheCommands.Remove("$Command--filter")
+  if ($CacheCommands.ContainsKey($Command)) {
+    $CacheCommands.Remove($Command)
+  }
+  if ($CacheCommands.ContainsKey("$Command--filter")) {
+    $CacheCommands.Remove("$Command--filter")
+  }
   $CacheAllCompletions.Clone().Keys |
     Where-Object { $_.StartsWith("$Command.") -or ($_ -eq $Command) } |
     ForEach-Object { $CacheAllCompletions.Remove($_) }
@@ -287,25 +309,29 @@ function New-Completion {
 
     if ($data) {
       Get-CompletionKeys $wordToComplete $commandAst $data.Commands -Filter $data.Filter -Sort $data.Sort -Where $data.Where |
-      Where-Object { $_.Key.ToString().ToLower() -notin $keywords } |
       ForEach-Object {
         $key = $_.Key
         $value = $_.Value
         $type = "ParameterValue"
         $listItemText = $key
         $tooltip = $key
-
+        
         if ($value) {
-          $value.Keys | ForEach-Object {
-            switch ($_.ToString().ToLower()) {
-              '#listitemtext' { $listItemText = $value[$_] }
-              '#type' { $type = $value[$_] }
-              '#tooltip' { $tooltip = $value[$_] }
+          $value.GetEnumerator() | ForEach-Object {
+            $lowerKey = $_.Key.ToString().ToLower()
+            if ($lowerKey -eq '#tooltip') {
+              $tooltip = $_.Value
+            }
+            elseif ($lowerKey -eq '#type') {
+              $type = $_.Value
+            }
+            elseif ($lowerKey -eq '#listitemtext') {
+              $listItemText = $_.Value
             }
           }
         }
         
-        [System.Management.Automation.CompletionResult]::new($key, $listItemText, $type, $toolTip)
+        [System.Management.Automation.CompletionResult]::new($key, $listItemText, $type, $tooltip)
       }
     }
   }
