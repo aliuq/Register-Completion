@@ -127,7 +127,7 @@ elseif ($Action -eq 'reset') {
   $version = (Test-ModuleManifest "$dir\Register-Completion.psd1").version
   $betaVersionNum = Get-BetaVersion
   if ($Beta) {
-    $betaVersion = "beta$($betaVersionNum + 1)"
+    $betaVersion = "beta$betaVersionNum"
     $fullVersion =  "$version-$betaVersion"
   }
   else {
