@@ -1,3 +1,12 @@
+# [](https://github.com/aliuq/Register-Completion/compare/v0.0.21...v) (2022-07-04)
+
+
+### Bug Fixes
+
+* fixed wrong variable and export function`Remove-Completion` ([2ee98d5](https://github.com/aliuq/Register-Completion/commit/2ee98d5112efd45b3bd951772767d6f51328e389))
+
+
+
 # [](https://github.com/aliuq/Register-Completion/compare/v0.0.20...v) (2022-07-04)
 
 
