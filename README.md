@@ -12,6 +12,8 @@ Easy to register tab completions with fixed data structures. Easy to customize.
 
 ## Installation
 
+Install module
+
 ```Powershell
 # Install
 Install-Module Register-Completion -Scope CurrentUser
@@ -19,34 +21,113 @@ Install-Module Register-Completion -Scope CurrentUser
 Import-Module Register-Completion
 ```
 
-Add in profile
+Open config file `$profile.ps1`
 
 ```Powershell
 # Powershell 7.x
 pwsh
 notepad $profile
-# Add `Import-Module Register-Completion` in top of file
 
 # Powershell 5.x
 powershell
 notepad $profile
-# Add `Import-Module Register-Completion` in top of file
+```
+
+Add in `$profile.ps1`
+
+```Powershell
+# profile.ps1
+Import-Module Register-Completion
+
+# Set Tab to menu complement and intellisense
+Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete
 ```
 
 ## Usage
 
 `New-Completion [[-Command] <String>] [[-HashList] <Object>] [-Force]`
 
-+ Param `HashList`, allows basic type number、string、array、hashtable、object or nested types.
-+ Param `-Force` to force a replacement when a completion exists
++ `-Command`: Command name
++ `-HashList`: Allows basic type number、string、array、hashtable、object or nested types.
++ `-Force`: Force a replacement when a completion exists
++ `-Filter`: Custom filter and sort function
++ `-Where`: Custom filter function
++ `-Sort`: Custom sort function
 
-Run `Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete` in current terminal, this will enable to see all avaliable tab completion keys.
+`Register-Completion` is usually used for tab completion of cli commands, but it goes beyond that, there are two types of tab completions: Known datas and dynamic datas.
 
-Let us start the first completion, then press `nc <Tab>`
+For known datas, use `New-Completion` can easily to register a completion. just need to construct the correct data format, example using part of the `npm` command:
 
 ```Powershell
-New-Completion nc 'arg1','arg2','arg3'
+$npmCmds = "
+  {
+   'login': ['--registry', '--scope', '--auth-type', '--always-auth', '--help'],
+   'cache': ['add', { 'clean': '--force', 'clear': '--force', 'rm': '--force' }, 'verify', '--help'],
+   'config': [{ 'set': ['--global'] }, 'get', 'delete', { list: ['-l', '--json'] }, 'edit', '--help'],
+   'init': ['--force', '--yes', '--scope', '--help', { '#tooltip': 'npm init <@scope> (same as ``npx <@scope>/create``) `nnpm init [<@scope>/]<name> (same as ``npx [<@scope>/]create-<name>``)' }],
+   'install': ['--save-prod', '--save-dev', '--save-optional', '--save-exact', '--no-save', '--help'],
+   'publish': ['--tag', { '--access': ['public', 'restricted'] }, '--dry-run', '--otp', '--help'],
+   'run': ['--silent', '--help'],
+   'uninstall': ['--save-prod', '--save-dev', '--save-optional', '--no-save', '--help'],
+   'version': ['major', 'minor', 'patch', 'premajor', 'preminor', 'prepatch', 'prerelease', '--preid', 'from-git', '--help'],
+   '--version': '',
+   '--help': ''
+  }
+"
+New-Completion npm $npmCmds
 ```
+
+Then, restart the current pssession or open a new terminal, use `npm <Tab>` to complete the command. In the above example, there is a special key `#tooltip`, which is a reserved field, and it means that after starting `MenuComplete`, powershell will give a tooltip, by providing this key, we can know more about.
+
+For dynamic data, we need to do some additional processing, continuing with the above field `$npmCmds`, using the `package.json` script as an example:
+
+<details>
+<summary>The code</summary>
+
+```Powershell
+Register-ArgumentCompleter -Native -CommandName npm -ScriptBlock {
+   param($wordToComplete, $commandAst, $cursorPosition)
+   [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
+   # If provided input string data, and needed to edit it,
+   # use `ConvertTo-Hash` to convert the string data to a hash table 
+   $commands = ConvertTo-Hash $npmCmds
+   # Remove the cache of the same completion key, because if exists, it will not be dynamic updated.
+   Remove-Completion "npm.run"
+   # Get package.json script content and append the script to the hashtable
+   if (Test-Path "$pwd\package.json") {
+      $scripts = (Get-Content "$pwd\package.json" | ConvertFrom-JSON).scripts
+      if ($null -ne $scripts) {
+         $scriptNames = $scripts | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+         $scriptNames | ForEach-Object {
+            # Add script name to the completion key, the script command to the completion tooltip
+            $commands.run[$_] = @{ '#tooltip' = $scripts.$_ }
+         }
+      }
+   }
+   # According to the $wordToComplete、$commandAst、$commands, get the avaliable completion data
+   # See more at https://github.com/aliuq/Register-Completion/blob/master/src/Completion.ps1#L303
+   Get-CompletionKeys $wordToComplete $commandAst $commands | ForEach-Object {
+      $key = $_.Key
+      $value = $_.Value
+      $tooltip = $key
+      
+      if ($value) {
+         $value.GetEnumerator() | ForEach-Object {
+            $lowerKey = $_.Key.ToString().ToLower()
+            if ($lowerKey -eq '#tooltip') {
+               $tooltip = $_.Value
+            }
+         }
+      }
+      
+      [System.Management.Automation.CompletionResult]::new($key, $key, "ParameterValue", $tooltip)
+   }
+}
+```
+
+</details>
+
+Then, enter a directory where the `package.json` file exists, use `npm run <Tab>` to complete the command. Except the script, we can also append dynamic dependencies to `npm uninstall <Tab>`, the code to implement it is not given here.
 
 Other `HashList` types to see the below examples. `-Force` let us can force to replacement a exist command.
 
