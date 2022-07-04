@@ -1,44 +1,53 @@
-[hashtable]$CacheAllCompletions = @{}
-[hashtable]$CacheCommands = @{}
+[hashtable]$CacheAllCompletions = [ordered]@{}
+[hashtable]$CacheCommands = [ordered]@{}
 $PSVersion = $PSVersionTable.PSVersion
+$keywords = '#listitemtext', '#type','#tooltip'
+
+class CacheCommandData {
+  $Commands = $null
+  [ScriptBlock]$Filter = $null
+  [ScriptBlock]$Sort = $null
+  [ScriptBlock]$Where = $null
+  [bool]$DefaultSort = $true
+
+  CacheCommandData ($c, [ScriptBlock]$f, [ScriptBlock]$s, [ScriptBlock]$w, [bool]$d) {
+    $this.Commands = $c
+    $this.Filter = $f
+    $this.Sort = $s
+    $this.Where = $w
+    $this.DefaultSort = $d
+  }
+}
 
 <#
 .SYNOPSIS
   Convert to hashtable format.
 .DESCRIPTION
-  Recursive conversion of data to hashtable format. hashtable values will be converted to hashtable.
-  e.g.
-   @{arg1 = "arg1_1"} -> @{arg1 = @{arg1_1 = ""}}
+  Recursive conversion of data to hashtable format, by default, hashtable value is emtpy string, but if this hashtable key in `@('#listitemtext', '#type','#tooltip')`, it will be reserved, because it is used by the construct `System.Management.Automation.CompletionResult`
 .PARAMETER InputObject
   Input data, support for basic data types
 .EXAMPLE
-  ConvertTo-Hash "arg"
-  Convert string to hashtable format
-.EXAMPLE
-  ConvertTo-Hash 100
-  Convert number to hashtable format
-.EXAMPLE
-  ConvertTo-Hash "['hello','world']"
-  Convert Javascript array to hashtable format
-.EXAMPLE
-  ConvertTo-Hash "[{arg: {arg_1: 'arg_1_1'}}]"
-  Convert Javascript array object to hashtable format
-.EXAMPLE
-  ConvertTo-Hash "[{arg: {arg_1: {arg_1_1: ['arg_1_1_1', 'arg_1_1_2']}}}]"
-  Convert Javascript nested array object to hashtable format
-.EXAMPLE
-  ConvertTo-Hash "[100, 'hello', {arg1: 'arg1_1'}, ['arg2', 'arg3']]"
-  Convert Javascript array to hashtable format
-.EXAMPLE
-  ConvertTo-Hash @("arg1", "arg2")
+  ConvertTo-Hash 'hello','world'
+  # output: @{'hello' = ''; 'world' = ''}
   Convert array to hashtable format
 .EXAMPLE
-  ConvertTo-Hash @("arg1", @{arg2 = "arg2_1"; arg3 = @("arg3_1", "arg3_2")})
-  Convert nested array to hashtable format
+  ConvertTo-Hash 100
+  # output: @{100 = ''}
+  Convert number to hashtable format
+.EXAMPLE
+  ConvertTo-Hash '{arg1: "hello", arg2: "world"}'
+  # output: @{arg1 = @{'hello' = ''}; arg2 = @{'world' = ''}}
+  Convert object to hashtable format
+.EXAMPLE
+  ConvertTo-Hash '[{arg1: {"#tooltip": "arg1 tooltip"}, arg2: {"#tooltip": "arg2 tooltip"}}]'
+  # output: @{arg1 = @{'#tooltip' = 'arg1 tooltip'}; arg2 = @{'#tooltip' = 'arg2 tooltip'}}
+  Convert Javascript object to hashtable format width keywords
 .INPUTS
   None.
 .OUTPUTS
   System.Collections.Hashtable
+.LINK
+  https://github.com/aliuq/Register-Completion
 #>
 function ConvertTo-Hash {
   Param($InputObject)
@@ -47,18 +56,23 @@ function ConvertTo-Hash {
     return ""
   }
 
-  [hashtable]$hash = @{}
+  [hashtable]$hash = [ordered]@{}
   $inputType = $InputObject.getType()
 
   if ($inputType -eq [hashtable]) {
-    $InputObject.Keys | ForEach-Object { $hash[$_] = ConvertTo-Hash $InputObject[$_] }
+    $InputObject.Keys | ForEach-Object {
+      if ($_.ToString().ToLower() -in $keywords) { $hash[$_] = $InputObject[$_] }
+      else { $hash[$_] = ConvertTo-Hash $InputObject[$_] }
+    }
   }
   elseif ($inputType -eq [Object[]]) {
     $InputObject | ForEach-Object { $hash += ConvertTo-Hash $_ }
   }
   elseif ($inputType -eq [System.Management.Automation.PSCustomObject]) {
-    $InputObject.psobject.Properties |
-    ForEach-Object { $hash[$_.Name] = ConvertTo-Hash $_.Value }
+    $InputObject.psobject.Properties | ForEach-Object {
+      if ($_.Name.ToString().ToLower() -in $keywords) { $hash[$_.Name] = $_.Value }
+      else { $hash[$_.Name] = ConvertTo-Hash $_.Value }
+    }
   }
   else {
     try {
@@ -68,7 +82,8 @@ function ConvertTo-Hash {
       else {
         $json = ConvertFrom-Json -InputObject $InputObject -AsHashtable
       }
-      if ($json.getType() -in [hashtable],[Object[]],[System.Management.Automation.PSCustomObject]) {
+      $jsonType = $json.getType()
+      if ($jsonType -in [hashtable],[Object[]],[System.Management.Automation.PSCustomObject]) {
         $hash = ConvertTo-Hash $json
       }
       else {
@@ -84,10 +99,10 @@ function ConvertTo-Hash {
 
 <#
 .SYNOPSIS
-  Get the completion keys.
+  According to input datas, returns avaliable completion object keys.
 .DESCRIPTION
-  According to the input word and data, return the corresponding command keys.
-  it usually used in the cmdlet `Register-ArgumentCompleter`, when provide datasets, it will return the right completion keys.
+  According to input word and data, return the corresponding command keys.
+  it usually used in the cmdlet `Register-ArgumentCompleter`, when provide datasets, it will return the avaliable completion keys.
 .PARAMETER Word
   The input word. From `$wordToComplete`
 .PARAMETER Ast
@@ -95,23 +110,34 @@ function ConvertTo-Hash {
 .PARAMETER HashList
   The datasets, support basic data types.
 .PARAMETER Filter
-  The filter function. if provided, it will be used to filter the completion keys.
+  The filter function. if provided, it will be used to filter and sort the completion object keys.
+.PARAMETER Where
+  The where function. if provided, it will be used to filter the completion object keys.
+.PARAMETER Sort
+  The sort function. if provided, it will be used to sort the completion object keys.
+.PARAMETER DefaultSort
+  Enable default sort function, by default, it is $true.
 .EXAMPLE
-  Get-CompletionKeys "" "case" "hello","world"
-  Returns `hello` and `world`
-.EXAMPLE
-  Get-CompletionKeys "h" "case h" "hello","world"
-  Returns `hello`
-.EXAMPLE
-  Get-CompletionKeys "" "case h" "hello","world"
-  Returns None.
+  Get-CompletionKeys '' nc 'hello','world'
+  # output: @(@{hello = ''}, @{world = ''})
+  Returns object array
 .INPUTS
   None.
 .OUTPUTS
-  System.Array
+  Object[]
+.LINK
+  https://github.com/aliuq/Register-Completion
 #>
 function Get-CompletionKeys {
-  Param([string]$Word, $Ast, $HashList, [ScriptBlock]$Filter)
+  Param(
+    [string]$Word,
+    $Ast,
+    $HashList,
+    [ScriptBlock]$Filter,
+    [ScriptBlock]$Where,
+    [ScriptBlock]$Sort,
+    [bool]$DefaultSort = $true
+  )
 
   if (!$HashList) {
     return @()
@@ -132,6 +158,7 @@ function Get-CompletionKeys {
 
   if (!$CacheAllCompletions.ContainsKey($key)) {
     $map = ConvertTo-Hash $HashList
+
     $prefix = ""
     $keyLevel | ForEach-Object {
       if ($prefix) {
@@ -142,22 +169,44 @@ function Get-CompletionKeys {
         $prefix = $_
       }
       if (!$CacheAllCompletions.ContainsKey($prefix)) {
-        $CacheAllCompletions[$prefix] = $map.Keys
+        if ($null -ne $map) {
+          $CacheAllCompletions[$prefix] = $map
+        }
+        else {
+          $CacheAllCompletions[$prefix] = @{}
+        }
       }
     }
   }
 
+  # Convert HashtableEnumerator to Object[]
+  $keyArrs = $CacheAllCompletions[$key].GetEnumerator() | ForEach-Object { $_ }
+
   if ($Filter -is [scriptblock]) {
-    & $Filter $CacheAllCompletions[$key] $Word
+    & $Filter $keyArrs $Word
   }
   else {
-    $CacheAllCompletions[$key] |
-    Where-Object { $_ -Like "*$Word*" } |
-    Sort-Object -Property @{Expression = { $_.ToString().StartsWith($Word) }; Descending = $true },
-                          @{Expression = { $_.ToString().indexOf($Word) }; Descending = $false },
-                          @{Expression = { $_.ToString().StartsWith('-') }; Descending = $false },
-                          @{Expression = { $_ }; Descending = $false }
+    if ($Where -is [scriptblock]) {
+      $keyArrs = & $Where $keyArrs $Word
+    }
+    else {
+      $keyArrs = $keyArrs | Where-Object { $_.Key -Like "*$Word*" }
+    }
+    if ($Word) {
+      $keyArrs = $keyArrs | Sort-Object -Property `
+        @{Expression = { $Word -And $_.Key.ToString().StartsWith($Word) }; Descending = $true }, `
+        @{Expression = { $Word -And $_.Key.ToString().indexOf($Word) }; Descending = $false }
+    }
+    if ($DefaultSort) {
+      $keyArrs = $keyArrs | Sort-Object -Property `
+        @{Expression = { $_.Key.ToString().StartsWith('-') }; Descending = $false }, `
+        @{Expression = { $_.Key }; Descending = $false }
+    }
+    if ($Sort -is [scriptblock]) {
+      $keyArrs = & $Sort $keyArrs
+    }
   }
+  $keyArrs
 }
 
 function Remove-Completion {
@@ -184,6 +233,12 @@ function Remove-Completion {
 .PARAMETER Filter
   The filter function. if provided, it will be used to filter the completion keys.
   The function will be called with two parameters: $Keys and $Word, and the return value is the filtered and sorted keys.
+.PARAMETER Where
+  The where function. if provided, it will be used to filter the completion object keys.
+.PARAMETER Sort
+  The sort function. if provided, it will be used to sort the completion object keys.
+.PARAMETER DefaultSort
+  Enable default sort function
 .EXAMPLE
   New-Completion demo "hello","world"
   Register a completion with command name `demo` and datasets `hello`、`world`.
@@ -206,13 +261,18 @@ function Remove-Completion {
   None.
 .OUTPUTS
   None.
+.LINK
+  https://github.com/aliuq/Register-Completion
 #>
 function New-Completion {
   Param(
     [string]$Command,
     $HashList,
     [switch]$Force = $false,
-    [ScriptBlock]$Filter
+    [ScriptBlock]$Filter,
+    [ScriptBlock]$Sort,
+    [ScriptBlock]$Where,
+    [bool]$DefaultSort = $true
   )
 
   if ($CacheCommands.ContainsKey($Command)) {
@@ -223,21 +283,38 @@ function New-Completion {
       return
     }
   }
-  $CacheCommands.Add($Command, $HashList)
-  $CacheCommands.Add("$Command--filter", $Filter)
+
+  $CacheCommands.Add($Command, [CacheCommandData]::new($HashList, $Filter, $Sort, $Where, $DefaultSort))
 
   Register-ArgumentCompleter -Native -CommandName $Command -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
 
     $cmd = $commandAst.CommandElements[0].Value
-    $cmdHashList = $CacheCommands[$cmd]
-    $cmdFilter = $CacheCommands["$cmd--filter"]
+    $data = $CacheCommands[$cmd]
 
-    if ($null -ne $cmdHashList) {
-      Get-CompletionKeys $wordToComplete $commandAst $cmdHashList $cmdFilter |
-      ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) }
+    if ($data) {
+      Get-CompletionKeys $wordToComplete $commandAst $data.Commands -Filter $data.Filter -Sort $data.Sort -Where $data.Where -DefaultSort $data.DefaultSort |
+      Where-Object { $_.Key.ToString().ToLower() -notin $keywords } |
+      ForEach-Object {
+        $key = $_.Key
+        $value = $_.Value
+        $type = "ParameterValue"
+        $listItemText = $key
+        $tooltip = $key
+
+        if ($value) {
+          $value.Keys | ForEach-Object {
+            switch ($_.ToString().ToLower()) {
+              '#listitemtext' { $listItemText = $value[$_] }
+              '#type' { $type = $value[$_] }
+              '#tooltip' { $tooltip = $value[$_] }
+            }
+          }
+        }
+        
+        [System.Management.Automation.CompletionResult]::new($key, $listItemText, $type, $toolTip)
+      }
     }
   }
 }
-
