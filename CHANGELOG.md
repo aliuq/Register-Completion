@@ -1,3 +1,17 @@
+# [](https://github.com/aliuq/Register-Completion/compare/v0.0.20...v) (2022-07-04)
+
+
+### Bug Fixes
+
+* remove default sort control ([2be84e3](https://github.com/aliuq/Register-Completion/commit/2be84e39d8cbe958ccafe36c6ef5b8fbcae8a845))
+
+
+### Features
+
+* support completion tooltip ([4c4f7d8](https://github.com/aliuq/Register-Completion/commit/4c4f7d8b2c8934831a4ad65a33a79dda28555b5d))
+
+
+
 # [](https://github.com/aliuq/Register-Completion/compare/v0.0.19...v) (2022-06-29)
 
 
