@@ -8,14 +8,12 @@ class CacheCommandData {
   [ScriptBlock]$Filter = $null
   [ScriptBlock]$Sort = $null
   [ScriptBlock]$Where = $null
-  [bool]$DefaultSort = $true
 
-  CacheCommandData ($c, [ScriptBlock]$f, [ScriptBlock]$s, [ScriptBlock]$w, [bool]$d) {
+  CacheCommandData ($c, [ScriptBlock]$f, [ScriptBlock]$s, [ScriptBlock]$w) {
     $this.Commands = $c
     $this.Filter = $f
     $this.Sort = $s
     $this.Where = $w
-    $this.DefaultSort = $d
   }
 }
 
@@ -115,8 +113,6 @@ function ConvertTo-Hash {
   The where function. if provided, it will be used to filter the completion object keys.
 .PARAMETER Sort
   The sort function. if provided, it will be used to sort the completion object keys.
-.PARAMETER DefaultSort
-  Enable default sort function, by default, it is $true.
 .EXAMPLE
   Get-CompletionKeys '' nc 'hello','world'
   # output: @(@{hello = ''}, @{world = ''})
@@ -135,8 +131,7 @@ function Get-CompletionKeys {
     $HashList,
     [ScriptBlock]$Filter,
     [ScriptBlock]$Where,
-    [ScriptBlock]$Sort,
-    [bool]$DefaultSort = $true
+    [ScriptBlock]$Sort
   )
 
   if (!$HashList) {
@@ -197,11 +192,11 @@ function Get-CompletionKeys {
         @{Expression = { $Word -And $_.Key.ToString().StartsWith($Word) }; Descending = $true }, `
         @{Expression = { $Word -And $_.Key.ToString().indexOf($Word) }; Descending = $false }
     }
-    if ($DefaultSort) {
-      $keyArrs = $keyArrs | Sort-Object -Property `
-        @{Expression = { $_.Key.ToString().StartsWith('-') }; Descending = $false }, `
-        @{Expression = { $_.Key }; Descending = $false }
-    }
+    
+    $keyArrs = $keyArrs | Sort-Object -Property `
+      @{Expression = { $_.Key.ToString().StartsWith('-') }; Descending = $false }, `
+      @{Expression = { $_.Key }; Descending = $false }
+
     if ($Sort -is [scriptblock]) {
       $keyArrs = & $Sort $keyArrs
     }
@@ -237,8 +232,6 @@ function Remove-Completion {
   The where function. if provided, it will be used to filter the completion object keys.
 .PARAMETER Sort
   The sort function. if provided, it will be used to sort the completion object keys.
-.PARAMETER DefaultSort
-  Enable default sort function
 .EXAMPLE
   New-Completion demo "hello","world"
   Register a completion with command name `demo` and datasets `hello`、`world`.
@@ -271,8 +264,7 @@ function New-Completion {
     [switch]$Force = $false,
     [ScriptBlock]$Filter,
     [ScriptBlock]$Sort,
-    [ScriptBlock]$Where,
-    [bool]$DefaultSort = $true
+    [ScriptBlock]$Where
   )
 
   if ($CacheCommands.ContainsKey($Command)) {
@@ -284,7 +276,7 @@ function New-Completion {
     }
   }
 
-  $CacheCommands.Add($Command, [CacheCommandData]::new($HashList, $Filter, $Sort, $Where, $DefaultSort))
+  $CacheCommands.Add($Command, [CacheCommandData]::new($HashList, $Filter, $Sort, $Where))
 
   Register-ArgumentCompleter -Native -CommandName $Command -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -294,7 +286,7 @@ function New-Completion {
     $data = $CacheCommands[$cmd]
 
     if ($data) {
-      Get-CompletionKeys $wordToComplete $commandAst $data.Commands -Filter $data.Filter -Sort $data.Sort -Where $data.Where -DefaultSort $data.DefaultSort |
+      Get-CompletionKeys $wordToComplete $commandAst $data.Commands -Filter $data.Filter -Sort $data.Sort -Where $data.Where |
       Where-Object { $_.Key.ToString().ToLower() -notin $keywords } |
       ForEach-Object {
         $key = $_.Key

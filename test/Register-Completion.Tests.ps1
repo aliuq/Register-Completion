@@ -442,19 +442,17 @@ Describe 'Test Cases' {
     Remove-Completion case
     $CacheCommands.case | Should -Be $null
   }
-  It "custom enable default sort" {
+
+  It "custom default sort" {
     $list = '["arg1", "arg2", "--help", "--set", "arg3", "--get", "arg4"]'
     New-Completion case $list -DefaultSort $false
     $CacheCommands.case.Commands | Should -Be $list
     $CacheCommands.case.Sort | Should -Be $null
-    $arr = Get-CompletionKeys '' 'case' $list -DefaultSort $false
+    $arr = Get-CompletionKeys '' 'case' $list
+    $arr.key | Should -Be @('arg1', 'arg2', 'arg3', 'arg4', '--get', '--help', '--set')
 
-    if ($PSVersion -lt "7.0") {
-      $arr.key | Should -Be @('--get', 'arg2', '--set', 'arg3', 'arg1', '--help', 'arg4')
-    }
-    else {
-      $arr.key | Should -Be @('arg4', '--get', 'arg1', 'arg2', '--set', 'arg3', '--help')
-    }
+    $arr = Get-CompletionKeys 'g' 'case g' $list
+    $arr.key | Should -Be @('arg1', 'arg2', 'arg3', 'arg4', '--get')
 
     Remove-Completion case
     $CacheCommands.case | Should -Be $null
