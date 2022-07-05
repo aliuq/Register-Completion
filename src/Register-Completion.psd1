@@ -12,7 +12,7 @@
 RootModule = 'Register-Completion.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.23'
+ModuleVersion = '0.0.24'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,7 +69,8 @@ PowerShellVersion = '5.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'New-Completion', 'Get-CompletionKeys', 'ConvertTo-Hash', 'Remove-Completion', 'Register-Alias'
+FunctionsToExport = 'New-Completion', 'Get-CompletionKeys', 'ConvertTo-Hash', 
+               'Remove-Completion', 'Register-Alias'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -110,7 +111,7 @@ PrivateData = @{
         ReleaseNotes = 'https://github.com/aliuq/Register-Completion/blob/master/CHANGELOG.md'
 
         # Prerelease string of this module
-        Prerelease = 'beta1'
+        # Prerelease = ''
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

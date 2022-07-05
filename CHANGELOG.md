@@ -1,3 +1,12 @@
+# [](https://github.com/aliuq/Register-Completion/compare/v0.0.23-beta1...v) (2022-07-05)
+
+
+### Features
+
+* add function `Register-Alias` ([2e5e0bf](https://github.com/aliuq/Register-Completion/commit/2e5e0bf870a6b5cb104920ad787bd761401a05c0))
+
+
+
 # Change Log
 
 
