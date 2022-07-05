@@ -1,4 +1,5 @@
 BeforeAll {
+  . "$pwd\src\Utils.ps1"
   . "$pwd\src\Completion.ps1"
 
   function Compare-Hashtable {
@@ -456,5 +457,27 @@ Describe 'Test Cases' {
 
     Remove-Completion case
     $CacheCommands.case | Should -Be $null
+  }
+}
+
+Describe 'Test Register-Alias' {
+  It "Test Command" {
+    Get-Command Register-Alias | Should -Be $true
+  }
+  It "Test Alias echo by string" {
+    Register-Alias hello "Write-Output 'Hello World!'"
+    hello | Should -Be 'Hello World!'
+  }
+  It "Test Alias echo by ScriptBlock" {
+    Register-Alias hello { Write-Output 'Hello World!' }
+    hello | Should -Be 'Hello World!'
+  }
+  It "Test Alias swd by string" {
+    Register-Alias swd "Write-Output `$pwd"
+    swd | Should -Be $pwd
+  }
+  It "Test Alias swd by ScriptBlock" {
+    Register-Alias swd { Write-Output $pwd }
+    swd | Should -Be $pwd
   }
 }
