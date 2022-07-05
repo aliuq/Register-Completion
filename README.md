@@ -10,7 +10,13 @@ Easy to register tab completions with fixed data structures. Easy to customize.
 > **Note**  
 > Recommeded Powershell version 7.0.0 or higher.
 
-[TOC]
+- [Register-Completion](#register-completion)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [New-Completion](#new-completion)
+    - [Register-Alias](#register-alias)
+  - [Global Variables](#global-variables)
+  - [License](#license)
 
 ## Installation
 
