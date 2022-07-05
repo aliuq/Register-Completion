@@ -31,4 +31,3 @@ function Register-Alias {
      Set-Alias $Name $fullName -scope global
   }
 }
-
