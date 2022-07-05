@@ -10,6 +10,8 @@ Easy to register tab completions with fixed data structures. Easy to customize.
 > **Note**  
 > Recommeded Powershell version 7.0.0 or higher.
 
+[TOC]
+
 ## Installation
 
 Install module
@@ -44,6 +46,8 @@ Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete
 ```
 
 ## Usage
+
+### New-Completion
 
 `New-Completion [[-Command] <String>] [[-HashList] <Object>] [-Force]`
 
@@ -152,6 +156,21 @@ New-Completion nc "{a:1,b:2,c:['c1','c2',{c3:{c3_1:'c3_1_1',c3_2:['c3_2_1','c3_2
    Param($Keys, $Word)
    $Keys | Where-Object { $_ -Like "*$Word*" } | Sort-Object -Descending
 } -Force
+```
+
+### Register-Alias
+
+`Register-Alias [[-Name] <String>] [[-Value] <String>]`
+
+Provide bash-like experiences, [see more](https://github.com/aliuq/Register-Completion/blob/master/src/Utils.ps1#L23)
+
+```Powershell
+Register-Alias ll ls
+Register-Alias la ls
+Register-Alias swd "echo $pwd"
+Register-Alias apps "cd ~/Projects"
+Register-Alias i "cd ~/Projects/$($args[0])"
+Register-Alias which Get-Command
 ```
 
 ## Global Variables
