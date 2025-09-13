@@ -1,7 +1,7 @@
 # Register-Completion
 
 ![GitHub](https://img.shields.io/github/license/aliuq/Register-Completion)
-![Github Action](https://img.shields.io/github/workflow/status/aliuq/Register-Completion/CI)
+![Github Action](https://img.shields.io/github/actions/workflow/status/aliuq/Register-Completion/ci.yml)
 ![powershellgallery downloads](https://img.shields.io/powershellgallery/dt/Register-Completion)
 ![powershellgallery version](https://img.shields.io/powershellgallery/v/Register-Completion?include_prereleases)
 
